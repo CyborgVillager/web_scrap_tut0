@@ -10,55 +10,67 @@ page = requests.get(base_url)
 
 # Verify we had a successful get request webpage call
 if page.status_code == requests.codes.ok:
-
-  # Get the whole webpage in beautiful soup format
-  bs = BeautifulSoup(page.text, 'lxml')
+    # Get the whole webpage in beautiful soup format
+    bs = BeautifulSoup(page.text, 'lxml')
 
 # Find something you spcify in the html
 list_of_all_players = bs.find('table', class_='multicol').find('ul').find_all('li')
 last_ten_players = list_of_all_players[-10:]
 
-# Will hold our data
-data = {
-  'Year': [],
-  'Country': [],
-  'Player': [],
-  'Team': []
-}
 
-# Scrape all 10 polayers in the top 10 list
-for list_item in last_ten_players:
+# Will hold the data
 
-  # Get the year and save it in the data dictionary
-  year = list_item.find('span').previousSibling.split()[0]
-  if year:
-    data['Year'].append(year)
-  else:
-    data['Year'].append('none')
+def get_player_info():
+    data = {
+        'Year': [],
+        'Country': [],
+        'Player': [],
+        'Team': [],
+    }
+# Scrape the site for top 10 players
+    for list_items in last_ten_players:
 
-  # Get the country and save it in the data dictionary
-  country = list_item.find('a')['title']
-  if country:
-    data['Country'].append(country)
-  else:
-    data['Country'].append('none')
+        # .previousSibling -> property returns the previous node of the specified node, in the same tree level
+        # get the year
+        year = list_items.find('span').previousSibling.split()[0]
+        # if no year exist place in dictionary None
+        if year:
+            data['Year'].append(year)
+        else:
+            data['Year'].append('None')
 
-  # Get the player name and save it in the data dictionary
-  player = list_item.find_all('a')[1].text
-  if player:
-    data['Player'].append(player)
-  else:
-    data['Player'].append('none')
+    # get the country name
+        country = list_items.find('a')['title']
+        # if no country exist place in dictionary None
+        if country:
+            data['Country'].append(country)
+        else:
+            data['Country'].append('None')
 
-  # Get the team name and save it in the data dictionary
-  team = list_item.find_all('a')[2].text
-  if team:
-    data['Team'].append(team)
-  else:
-    data['Team'].append('none')
+    # get the player name by finding all 'a' tags
+    # .text just gives you the name of the player
+        player_name = list_items.find_all('a')[1].text
+        # if no player name exist place in dictionary None
+        if player_name:
+            data['Player'].append(player_name)
+        else:
+            data['Player'].append('None')
+
+    # team
+        team_name = list_items.find_all('a')[2].text
+        # if no team name exist place in dictionary None
+        if team_name:
+            data['Team'].append(team_name)
+        else:
+            data['Team'].append('None')
+
+    #pd.DataFrame create a db
+    panda_get_info = pd.DataFrame(data, columns=['Year', 'Country', 'Player', 'Team'])
+    print(panda_get_info)
+    panda_get_info.to_csv('top_players_of_the_year.csv', sep=',', index=False, encoding='utf-8')
+
+def main():
+    get_player_info()
 
 
-table = pd.DataFrame(data, columns=['Year', 'Country', 'Player', 'Team'])
-table.index = table.index + 1
-print(table)
-table.to_csv('players_of_the_year.csv', sep=',', index=False, encoding='utf-8')
+main()
